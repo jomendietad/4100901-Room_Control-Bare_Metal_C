@@ -1,0 +1,31 @@
+flowchart LR
+    A[Inicio] --> B[Inicialización del sistema]
+    B --> B1[Inicializar GPIO, UART, TIM3 PWM, SysTick]
+    B1 --> C[Entrar al bucle principal]
+
+    subgraph Bucle_Principal
+      C --> C1[alternar_heartbeat_led]
+      C1 --> C2[proceso_control_habitación]
+      C2 --> C3[retardo_systick_ms]
+      C3 --> C4[Actualizar ciclo de trabajo PWM]
+      C4 --> C5[Retardo del bucle de luz]
+      C5 --> C6[Ajustar ciclo de trabajo]
+      C6 --> C
+    end
+
+    %% Eventos asíncronos
+    %% Interrupción por botón
+    EXTI[IRQ EXTI15_10] -->|Botón B1 presionado| D[control_habitación_en_presión_boton]
+    D --> E[Activar PA7, iniciar temporizador de 3s]
+    E --> F[UART: Botón presionado]
+    F --> G{¿Han pasado 3s?}
+    G -->|Sí| H[Apagar PA7]
+    H --> I[UART: LED PA7 apagado]
+
+    %% Interrupción UART RX
+    USART[IRQ USART2] -->|Recibir carácter| J[control_habitación_al_recibir_uart]
+    J --> K{¿c == H/L?}
+    K -->|H/h| L[Establecer PWM al 100%]
+    K -->|L/l| M[Establecer PWM al 0%]
+    L --> N[UART: PWM al 100%]
+    M --> O[UART: PWM al 0%]
