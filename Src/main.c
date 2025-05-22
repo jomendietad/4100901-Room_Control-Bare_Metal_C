@@ -34,7 +34,7 @@ int main(void)
     // LED Heartbeat
     gpio_setup_pin(GPIOA, HEARTBEAT_LED_PIN, GPIO_MODE_OUTPUT, 0);
 
-    // LED Externo ON/OFF
+    // LED Externo ON/OFF (PA7/pin D11 físico)
     gpio_setup_pin(GPIOA, EXTERNAL_LED_ONOFF_PIN, GPIO_MODE_OUTPUT, 0);
 
     // Botón B1
@@ -46,16 +46,28 @@ int main(void)
     nvic_usart2_irq_enable();
 
     // TIM3 Canal 1 para PWM
-    tim3_ch1_pwm_init(1000); // ej. 1000 Hz
-    tim3_ch1_pwm_set_duty_cycle(70); // ej. 50%
+    tim3_ch1_pwm_init(500); // ej. 1000 Hz
+    tim3_ch1_pwm_set_duty_cycle(70); // ej. 70%
 
     // Inicialización de la Lógica de la Aplicación (room_control)
     room_control_app_init();
 
     // Mensaje de bienvenida o estado inicial (puede estar en room_control_app_init o aquí)
     uart2_send_string("\r\nSistema Inicializado. Esperando eventos...\r\n");
+
+    uint8_t duty = 0;
+    int8_t dir = 1;
     while (1) {
         heartbeat_led_toggle();
+        room_control_process();
+        // Pequeño delay para evitar consumo excesivo de CPU
+        systick_delay_ms(50);
+        tim3_ch1_pwm_set_duty_cycle(duty);
+        for (volatile uint32_t i = 0; i < 50000; i++);
+        duty += dir;
+        if (duty == 0 || duty == 100) {
+            dir = -dir;
+        }
     }
 }
 

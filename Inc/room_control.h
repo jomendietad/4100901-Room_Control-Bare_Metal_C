@@ -29,4 +29,10 @@ void room_control_on_uart_receive(char received_char);
  */
 void room_control_app_init(void);
 
+/**
+ * @brief (Opcional) Función para procesar la lógica de room_control en el bucle
+ *        principal. Puede ser llamada en el bucle infinito de main().
+ */
+void room_control_process(void);
+
 #endif // ROOM_CONTROL_H
